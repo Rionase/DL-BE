@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
-
+from rest_framework_simplejwt.tokens import AccessToken
 
 User = get_user_model()
 
@@ -28,10 +27,11 @@ class LoginSerializer(serializers.Serializer):
         from django.contrib.auth import authenticate
         user = authenticate(email=data['email'], password=data['password'])
         if user:
-            refresh = RefreshToken.for_user(user)
-            refresh["role"] = user.role
+            # Generate an access token
+            access = AccessToken.for_user(user)
+            access["role"] = user.role  # Embed the user's role into the token claims
             return {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
+                'token': str(access),  # Return the access token
+                'role': user.role       # Include the user's role
             }
         raise serializers.ValidationError("Invalid credentials")
