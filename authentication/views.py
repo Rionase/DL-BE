@@ -23,3 +23,17 @@ class AdminView(APIView):
     @role_required("admin")  # Ensure role-based access
     def get(self, request):
         return Response({"message": "Welcome, admin!"})
+
+class GetMeView(APIView):
+    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+
+    def get(self, request):
+        user = request.user  # Get the authenticated user
+        return Response(
+            {
+                "email": user.email,
+                "role": user.role,
+                "username": user.username
+            },
+            status=status.HTTP_200_OK
+        )

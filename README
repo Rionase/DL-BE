@@ -1,0 +1,15 @@
+## NEED TO BE INSTALLED LIBRARY
+
+```bash
+pip install tensorflow opencv-python matplotlib psutil django djangorestframework djangorestframework-simplejwt django-cors-headers
+```
+
+1. tensorflow
+2. opencv-python
+3. matplotlib
+4. Pillow
+5. psutil
+6. django
+7. djangorestframework
+8. djangorestframework-simplejwt
+9. django-cors-headers

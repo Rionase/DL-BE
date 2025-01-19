@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authentication',
+    'ai',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',  # To enable token blacklisting
     'corsheaders',
