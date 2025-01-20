@@ -24,7 +24,9 @@ data_organic = 'data/Organik'
 data_unorganic = 'data/Anorganik'
 
 # Base directory for datasets
-BASE_DATASET_DIRECTORY = "dataset"  # Path to your dataset folder   
+BASE_DATASET_DIRECTORY = "dataset"  # Path to your dataset folder 
+BASE_DATA_DIRECTORY = "data"  
+BASE_VALIDATION_DIRECTORY = "validation"
 
 class PredictImages(APIView):
     parser_classes = [MultiPartParser]  # Ensure the API accepts multipart file uploads
@@ -337,7 +339,7 @@ class TrainModel(APIView):
         return Response(
             {
                 "message": f"successfully train new model : {GetLastModelFile()}",
-            },
+            },  
             status=status.HTTP_201_CREATED,
         )
 
@@ -352,24 +354,16 @@ class GetProcessedData(APIView):
                 for f in os.listdir(directory_path)
                 if os.path.isfile(os.path.join(directory_path, f))
             ]
-        data = []
 
         try:
             # Collect files with full paths from each directory
             photo_organic_files = get_files_from_directory(data_organic)
             photo_unorganic_files = get_files_from_directory(data_unorganic)
 
-            for item in photo_organic_files:
-                data.append({
-                    "file_name": item,
-                    "type": 'organic'
-                })
-
-            for item in photo_unorganic_files:
-                data.append({
-                    "file_name": item, 
-                    "type": 'unorganic'
-                })
+            data = {
+                "organic": photo_organic_files,
+                "unorganic": photo_unorganic_files
+            }
 
             # Build the response
 
@@ -377,3 +371,86 @@ class GetProcessedData(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class GetDataImageView(APIView):
+    def get(self, request, *args, **kwargs):
+        # Get the relative path from the URL
+        relative_path = kwargs.get('path', None)
+        if not relative_path:
+            return Response({"error": "Path parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Construct the full path to the file
+        full_path = os.path.join(BASE_DATA_DIRECTORY, relative_path)
+
+        # Check if the file exists and directly return it
+        if os.path.exists(full_path) and os.path.isfile(full_path):
+            response = FileResponse(open(full_path, 'rb'), content_type='image/*')
+            response['Content-Disposition'] = f'inline; filename="{os.path.basename(full_path)}"'
+            return response
+
+        # If file not found, return 404
+        raise Http404("File not found.")
+
+class GetModels(APIView):
+    def get(self, request, *args, **kwargs):
+        # Define the path to the "models" folder at the project root
+        root_path = os.getcwd()  # Current working directory, which contains "manage.py"
+        models_folder_path = os.path.join(root_path, "models")
+
+        # Check if the "models" folder exists
+        if not os.path.exists(models_folder_path):
+            return Response(
+                {"error": "'models' folder not found in the project root."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            # List all files in the "models" folder
+            files = [
+                f for f in os.listdir(models_folder_path)
+                if os.path.isfile(os.path.join(models_folder_path, f))
+            ]
+            result = []
+
+            python_files = [f for f in files]
+
+            for model in python_files:
+                data = {
+                    "models_name": model,
+                    "accuracy": None,
+                    "loss": None,
+                }
+                base_name = os.path.splitext(model)[0]
+
+                if os.path.exists(f"validation/accuracy/{base_name}.png"):
+                    data["accuracy"] = f"validation/accuracy/{base_name}.png"
+
+                if os.path.exists(f"validation/loss/{base_name}.png"):
+                    data["loss"] = f"validation/loss/{base_name}.png"
+                result.append(data)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        return Response(result, status=status.HTTP_200_OK)
+
+class GetModelValidationImage(APIView):
+    def get(self, request, *args, **kwargs):
+        # Get the relative path from the URL
+        relative_path = kwargs.get('path', None)
+        if not relative_path:
+            return Response({"error": "Path parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Construct the full path to the file
+        full_path = os.path.join(BASE_VALIDATION_DIRECTORY, relative_path)
+        print(full_path)
+
+        # Check if the file exists and directly return it
+        if os.path.exists(full_path) and os.path.isfile(full_path):
+            response = FileResponse(open(full_path, 'rb'), content_type='image/*')
+            response['Content-Disposition'] = f'inline; filename="{os.path.basename(full_path)}"'
+            return response
+
+        # If file not found, return 404
+        raise Http404("File not found.")
