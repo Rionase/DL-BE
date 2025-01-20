@@ -2,3 +2,4 @@ data/
 dataset/
 tmp/
 __pycache__/
+validation/

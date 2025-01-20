@@ -9,7 +9,7 @@ dataset_video_unorganic = 'dataset/Video/Anorganik'
 dataset_foto_organic = 'dataset/Foto/Organik'
 dataset_foto_unorganic = 'dataset/Foto/Anorganik'
 
-data_organic = 'data/Oganik'
+data_organic = 'data/Organik'
 data_unorganic = 'data/Anorganik'
 
 data_dir = 'data'
@@ -18,6 +18,25 @@ image_exts = ['jpeg', 'jpg', 'png']
 def CopyFile (source_file, destination_dir) :
     shutil.copy(source_file, destination_dir)
     print("saved to :", destination_dir)
+
+def clear_directory(directory_path):
+    """
+    Menghapus semua isi dari sebuah direktori tanpa menghapus direktori itu sendiri.
+    :param directory_path: Path dari direktori yang akan dikosongkan.
+    """
+    if not os.path.isdir(directory_path):
+        raise ValueError(f"{directory_path} bukan direktori yang valid.")
+    
+    for item in os.listdir(directory_path):
+        item_path = os.path.join(directory_path, item)
+        try:
+            if os.path.isfile(item_path) or os.path.islink(item_path):
+                os.remove(item_path)  # Hapus file atau symlink
+            elif os.path.isdir(item_path):
+                shutil.rmtree(item_path)  # Hapus subdirektori
+        except Exception as e:
+            print(f"Gagal menghapus {item_path}: {e}")
+
 
 def GetAllFiles(dir_name):
 
@@ -31,19 +50,21 @@ def GetAllFiles(dir_name):
         dir_name (str): The path to the directory from which to retrieve files.
     """
 
-    listFile = {}
+    # listFile = {}
+    listFile = []
     for root, dirs, files in os.walk(dir_name):
         # 'root' is the current directory path
         # 'dirs' is the list of subdirectories in 'root'
         # 'files' is the list of files in 'root'
         
         for file in files:
-            file_path = os.path.join(root, file)
-            # Get the original file extension
-            _, extension = os.path.splitext(file)
-            # Generate a unique filename in the format IMG_{uuid}.{extension}
-            unique_file_name = f"IMG_{uuid.uuid4()}{extension}"
-            listFile[unique_file_name] = file_path 
+            listFile.append(file)
+            # file_path = os.path.join(root, file)
+            # # Get the original file extension
+            # _, extension = os.path.splitext(file)
+            # # Generate a unique filename in the format IMG_{uuid}.{extension}
+            # unique_file_name = f"IMG_{uuid.uuid4()}{extension}"
+            # listFile[unique_file_name] = file_path 
 
     return listFile
 
@@ -101,23 +122,33 @@ def OrganizeDataset () :
 
     # ORGANIZE ORGANIC PHOTO
     organicPhoto = GetAllFiles(dataset_foto_organic)
-    for fileName, filePath in organicPhoto.items():
-        CopyFile(filePath, f"{data_organic}/{fileName}")
+    for fileName in organicPhoto:
+        CopyFile(f"{dataset_foto_organic}/{fileName}", data_organic)
+    clear_directory(dataset_foto_organic)
+    # for fileName, filePath in organicPhoto.items():
+    #     CopyFile(filePath, f"{data_organic}/{fileName}")
+    # clear_directory(dataset_foto_organic)
 
     # ORGANIZE UNORGANIC PHOTO
     unorganicPhoto = GetAllFiles(dataset_foto_unorganic)
-    for fileName, filePath in unorganicPhoto.items():
-        CopyFile(filePath, f"{data_unorganic}/{fileName}")
+    for fileName in unorganicPhoto:
+        CopyFile(f"{dataset_foto_unorganic}/{fileName}", data_unorganic)
+    clear_directory(dataset_foto_unorganic)
+    # for fileName, filePath in unorganicPhoto.items():
+    #     CopyFile(filePath, f"{data_unorganic}/{fileName}")
+    # clear_directory(dataset_foto_unorganic)
 
     # ORGANIZE ORGANIC VIDEO
-    organicVideo = GetAllFiles(dataset_video_organic)
-    for fileName, filePath in organicVideo.items():
-        SplitVideoToImage(fileName, filePath, data_organic, 60)
+    # organicVideo = GetAllFiles(dataset_video_organic)
+    # for fileName, filePath in organicVideo.items():
+    #     SplitVideoToImage(fileName, filePath, data_organic, 60)
+    # clear_directory(dataset_video_organic)
 
     # ORGANIZE UNORGANIC VIDEO
-    unorganicVideo = GetAllFiles(dataset_video_unorganic)
-    for fileName, filePath in unorganicVideo.items():
-        SplitVideoToImage(fileName, filePath, data_unorganic, 60)
+    # unorganicVideo = GetAllFiles(dataset_video_unorganic)
+    # for fileName, filePath in unorganicVideo.items():
+    #     SplitVideoToImage(fileName, filePath, data_unorganic, 60)
+    # clear_directory(dataset_video_unorganic)
 
 def RemoveDodgyImage() :
     """
@@ -129,18 +160,25 @@ def RemoveDodgyImage() :
       - If the image cannot be opened or does not have an allowed extension, it is deleted.
     """
 
+    errorLogs = []
+
     for image_class in os.listdir(data_dir):
         for image in os.listdir(os.path.join(data_dir, image_class)):
             image_path = os.path.join(data_dir, image_class, image)
+            file_extension = os.path.splitext(image_path)[-1].lstrip(".")
             try:
-                img = cv2.imread(image_path)
-                with Image.open(image_path) as img_file:
-                    img_format = img_file.format.lower()
-                if img_format not in image_exts:
+                if file_extension not in image_exts:
+                    errorLogs.append(f"REMOVE {image_path} | {image_path} is not in jpeg, jpg or png extention")
                     print('Image not in ext list {}'.format(image_path))
                     os.remove(image_path)
+                else :
+                    img = cv2.imread(image_path)
+                    with Image.open(image_path) as img_file:
+                        img_format = img_file.format.lower()
             except Exception as e:
+                errorLogs.append(f"REMOVE {image_path} | Issue with image {image_path}")
                 print('Issue with image {}'.format(image_path))
                 os.remove(image_path)
 
     print("LOG : Success Removing Dodgy Image")
+    return errorLogs

@@ -72,14 +72,14 @@ def ModelingAndTrain () :
     plt.plot(hist.history['val_loss'], color='orange', label='val_loss')
     fig.suptitle('Loss', fontsize=20)
     plt.legend(loc="upper left")
-    plt.show()
+    plt.savefig(f"validation/loss/model-{GetLastModelCount() + 1}.png")
 
     fig = plt.figure()
     plt.plot(hist.history['accuracy'], color='teal', label='accuracy')
     plt.plot(hist.history['val_accuracy'], color='orange', label='val_accuracy')
     fig.suptitle('Accuracy', fontsize=20)
     plt.legend(loc="upper left")
-    plt.show()
+    plt.savefig(f"validation/accuracy/model-{GetLastModelCount() + 1}.png")
 
     # SAVE GENERATED MODEL IN LOCAL FILE
     model.save(os.path.join('models', f"model-{GetLastModelCount() + 1}.h5"))
