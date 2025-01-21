@@ -70,7 +70,7 @@ def GetAllFiles(dir_name):
 
 def SplitVideoToImage(file_name, video_path, output_dir, frame_interval = 30):
     """
-    Splits a video into images at the specified frame interval, skipping the first and last 10 seconds.
+    Splits a video into images at the specified frame interval, skipping the first and last 1 seconds.
     
     Args:
         video_path (str): Path to the input video file.
@@ -90,12 +90,12 @@ def SplitVideoToImage(file_name, video_path, output_dir, frame_interval = 30):
     fps = cap.get(cv2.CAP_PROP_FPS)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    # Calculate frames to skip: 10 seconds at start and 10 seconds at end
-    skip_seconds = 10
-    start_frame = int(fps * skip_seconds)  # Frames to skip at the beginning (10 seconds)
-    end_frame = total_frames - int(fps * skip_seconds)  # Ending frame to stop before the last 10 seconds
+    # Calculate frames to skip: 1 seconds at start and 1 seconds at end
+    skip_seconds = 1
+    start_frame = int(fps * skip_seconds)  # Frames to skip at the beginning (1 seconds)
+    end_frame = total_frames - int(fps * skip_seconds)  # Ending frame to stop before the last 1 seconds
 
-    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)  # Start at the frame after 10 seconds
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)  # Start at the frame after 1 seconds
 
     frame_count = start_frame
     image_count = 0
